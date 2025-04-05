@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>แดชบอร์ดสถิติอาชญากรรม</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-cloud/build/d3.layout.cloud.js"></script>
+  <style>
+    #wordcloud {
+      width: 100%;
+      height: 300px;
+    }
+  </style>
+</head>
+
+<body class="bg-light">
+  <div class="container mt-4">
+    <h2 class="text-center text-primary">
+      📊 สถิติภาพรวมและแนวโน้มอาชญากรรมในประเทศไทย
+    </h2>
+
+    <div class="row mt-4">
+      <div class="col-md-4">
+        <div class="card p-3">
+          <h5>🔍 ตัวกรอง</h5>
+
+          <label>📅 เลือกปีเริ่มต้น:</label>
+          <select class="form-select">
+            <option>2566</option>
+            <option>2567</option>
+            <option>2568</option>
+          </select>
+
+          <label class="mt-2">📅 เลือกปีสิ้นสุด:</label>
+          <select class="form-select">
+            <option>2566</option>
+            <option>2567</option>
+            <option>2568</option>
+          </select>
+
+          <label class="mt-2">📍 เลือกพื้นที่:</label>
+          <select id="regionSelect" class="form-select">
+            <option value="ประเทศไทย">ประเทศไทย</option>
+            <option value="จังหวัด">จังหวัด</option>
+          </select>
+
+          <div id="provinceContainer" style="display: none" class="mt-2">
+            <label>📍 เลือกจังหวัด:</label>
+            <select id="provinceSelect" class="form-select">
+              <option value="กรุงเทพมหานคร">กรุงเทพมหานคร</option>
+              <option value="เชียงใหม่">เชียงใหม่</option>
+              <option value="ภูเก็ต">ภูเก็ต</option>
+            </select>
+          </div>
+
+          <div id="districtContainer" style="display: none" class="mt-2">
+            <label>📍 เลือกอำเภอ/เขต:</label>
+            <select id="districtSelect" class="form-select">
+              <!-- ตัวเลือกจะถูกเติมโดย JavaScript -->
+            </select>
+          </div>
+
+          <label class="mt-2">📁 เลือกหมวดวิเคราะห์:</label>
+          <select id="analysisCategory" class="form-select">
+            <option value="trend">แนวโน้มอาชญากรรม</option>
+            <option value="behavior">วิเคราะห์เชิงพฤติกรรม</option>
+            <option value="age">จำแนกตามช่วงวัย</option>
+            <option value="gender">จำแนกตามเพศ</option>
+            <option value="time">จำแนกตามเวลา</option>
+            <option value="violent">แสดงเฉพาะคดีรุนแรง</option>
+            <option value="economic">แสดงเฉพาะคดีเศรษฐกิจ</option>
+            <option value="genderCrime">แสดงเฉพาะคดีเพศ</option>
+          </select>
+
+          <button class="btn btn-primary mt-3 w-100">🔘 แสดงผลการวิเคราะห์</button>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <div class="card p-3">
+          <h5 class="text-center">📊 กราฟวิเคราะห์</h5>
+
+          <div id="crimeTrendSection">
+            <canvas id="crimeTrendChart"></canvas>
+          </div>
+
+          <div id="crimeCategorySection" style="display: none">
+            <canvas id="crimeCategoryChart"></canvas>
+          </div>
+
+          <div id="demographicsSection" style="display: none">
+            <canvas id="demographicsChart"></canvas>
+          </div>
+
+          <div id="genderSection" style="display: none">
+            <canvas id="genderChart"></canvas>
+          </div>
+
+          <div id="timeSection" style="display: none">
+            <canvas id="timeChart"></canvas>
+          </div>
+
+          <div id="violentCrimeSection" style="display: none">
+            <canvas id="violentCrimeChart"></canvas>
+          </div>
+
+          <div id="economicCrimeSection" style="display: none">
+            <canvas id="economicCrimeChart"></canvas>
+          </div>
+
+          <div id="genderCrimeSection" style="display: none">
+            <canvas id="genderCrimeChart"></canvas>
+          </div>
+        </div>
+        <div class="mt-2 text-center">
+          <button class="btn btn-success">📄 ดาวน์โหลด PDF</button>
+          <button class="btn btn-warning">📊 ส่งออก Excel / CSV</button>
+          <button class="btn btn-info" id="shareButton">
+            📍 แชร์แดชบอร์ดเฉพาะเรื่องผ่านลิงก์สาธารณะ / QR Code
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-5">
+      <div class="col-md-6">
+        <h3>ใคร</h3>
+        <div class="card p-3">
+        </div>
+      </div>
+      <div class="col-md-6">
+        <h3>Risk Area</h3>
+        <div class="card p-3">
+          <div class="card-body">
+            <h5 class="card-title">Top 10 พื้นที่เสี่ยงที่สุด</h5>
+            <canvas id="heatmap"></canvas>
+          </div>
+        </div>
+        <div class="card mt-3">
+          <div class="card-body">
+            <h5 class="card-title">เปรียบเทียบเขต</h5>
+            <canvas id="areaComparison"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <h3>ช่วงเวลา/เทศกาล</h3>
+        <!-- Time Section -->
+        <div class="card p-3">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5>จำนวนคดีตามช่วงเวลา</h5>
+            <select id="timeToggle" class="form-select w-auto">
+              <option value="hourly">รายชั่วโมง</option>
+              <option value="daily">รายวัน</option>
+            </select>
+          </div>
+          <canvas id="crimeTimeChart"></canvas>
+        </div>
+        <!-- Festival Section -->
+        <div class="card p-3 mt-2">
+          <h5 class="card-title">จำนวนคดีตามเทศกาล</h5>
+          <canvas id="festivalCrimeChart"></canvas>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <h3>รูปแบบการก่อเหตุ</h3>
+        <div class="card p-3 " id="wordcloud"></div>
+        <!-- Crime Pattern Stat -->
+        <div class="card p-3 mt-2">
+          <h5 class="card-title">สถิติรูปแบบการก่อเหตุ</h5>
+          <canvas id="crimePatternChart" height="500"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-6">
+        เหยื่อ
+      </div>
+      <div class="col-md-6">
+        TEST
+      </div>
+    </div>
+    <!-- Year Stat -->
+    <div class="row mt-4">
+      <div class="col-md-12">
+        <h3>📊 เปรียบเทียบสถิติแยกตามปี</h3>
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped">
+            <thead class="table-primary">
+              <tr>
+                <th>ประเภทคดี</th>
+                <th>2566</th>
+                <th>2567</th>
+                <th>2568 (ล่าสุด)</th>
+                <th>แนวโน้ม</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ชิงทรัพย์</td>
+                <td>1,230</td>
+                <td>1,650</td>
+                <td>1,780</td>
+                <td>🔺 เพิ่มขึ้นต่อเนื่อง</td>
+              </tr>
+              <tr>
+                <td>ลักทรัพย์</td>
+                <td>3,540</td>
+                <td>3,220</td>
+                <td>2,980</td>
+                <td>🔻 ลดลงเล็กน้อย</td>
+              </tr>
+              <tr>
+                <td>อาชญากรรมไซเบอร์</td>
+                <td>980</td>
+                <td>1,390</td>
+                <td>1,980</td>
+                <td>🔺 พุ่งสูงอย่างมีนัย</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Download Section -->
+
+
+  <script>
+    const crimePatternSection =
+      document.getElementById("crimeCategoryChart").parentElement;
+
+
+    analysisCategory.addEventListener("change", (event) => {
+      if (event.target.value === "trend") {
+        crimePatternSection.style.display = "none"; // ซ่อนเมื่อเลือก "แนวโน้มอาชญากรรม"
+      } else {
+        crimePatternSection.style.display = "block"; // แสดงเมื่อเลือกหมวดอื่น
+      }
+    });
+  </script>
+  <script>
+    // Sample Chart Data
+    const crimeTrendCtx = document
+      .getElementById("crimeTrendChart")
+      .getContext("2d");
+    const crimeCategoryCtx = document
+      .getElementById("crimeCategoryChart")
+      .getContext("2d");
+
+
+    const regionSelect = document.getElementById("regionSelect");
+    const provinceContainer = document.getElementById("provinceContainer");
+    const provinceSelect = document.getElementById("provinceSelect");
+    const districtContainer = document.getElementById("districtContainer");
+    const districtSelect = document.getElementById("districtSelect");
+
+
+    const districts = {
+      กรุงเทพมหานคร: ["เขตพระนคร", "เขตดุสิต", "เขตบางรัก"],
+      เชียงใหม่: ["อำเภอเมืองเชียงใหม่", "อำเภอแม่ริม", "อำเภอสันกำแพง"],
+      ภูเก็ต: ["อำเภอเมืองภูเก็ต", "อำเภอกะทู้", "อำเภอถลาง"],
+    };
+
+
+    regionSelect.addEventListener("change", () => {
+      if (regionSelect.value === "จังหวัด") {
+        provinceContainer.style.display = "block";
+      } else {
+        provinceContainer.style.display = "none";
+        districtContainer.style.display = "none";
+      }
+    });
+
+
+    provinceSelect.addEventListener("change", () => {
+      const selectedProvince = provinceSelect.value;
+      if (districts[selectedProvince]) {
+        districtSelect.innerHTML = districts[selectedProvince]
+          .map(
+            (district) => `<option value="${district}">${district}</option>`
+          )
+          .join("");
+        districtContainer.style.display = "block";
+      } else {
+        districtContainer.style.display = "none";
+      }
+    });
+
+
+    const analysisCategory = document.getElementById("analysisCategory");
+    let currentChart;
+
+
+    // ฟังก์ชันสำหรับการแสดงกราฟตามหมวดหมู่ที่เลือก
+    function updateChart(category) {
+      // ซ่อนกราฟทั้งหมดก่อน
+      document.getElementById("crimeTrendSection").style.display = "none";
+      document.getElementById("crimeCategorySection").style.display = "none";
+      document.getElementById("demographicsSection").style.display = "none";
+      document.getElementById("genderSection").style.display = "none";
+      document.getElementById("timeSection").style.display = "none";
+      document.getElementById("violentCrimeSection").style.display = "none";
+      document.getElementById("economicCrimeSection").style.display = "none";
+      document.getElementById("genderCrimeSection").style.display = "none";
+
+
+      // เพิ่มกราฟตามหมวดหมู่ที่เลือก
+      if (category === "trend") {
+        document.getElementById("crimeTrendSection").style.display = "block";
+        updateCrimeTrendChart();
+      } else if (category === "behavior") {
+        document.getElementById("crimeCategorySection").style.display =
+          "block";
+        updateCrimeCategoryChart();
+      } else if (category === "age") {
+        document.getElementById("demographicsSection").style.display =
+          "block";
+        updateDemographicsChart();
+      } else if (category === "gender") {
+        document.getElementById("genderSection").style.display = "block";
+        updateGenderChart();
+      } else if (category === "time") {
+        document.getElementById("timeSection").style.display = "block";
+        updateTimeChart();
+      } else if (category === "violent") {
+        document.getElementById("violentCrimeSection").style.display =
+          "block";
+        updateViolentCrimeChart();
+      } else if (category === "economic") {
+        document.getElementById("economicCrimeSection").style.display =
+          "block";
+        updateEconomicCrimeChart();
+      } else if (category === "genderCrime") {
+        document.getElementById("genderCrimeSection").style.display = "block";
+        updateGenderCrimeChart();
+      }
+    }
+
+
+    // Crime Trend Chart
+    function updateCrimeTrendChart() {
+      const crimeTrendCtx = document
+        .getElementById("crimeTrendChart")
+        .getContext("2d");
+
+      new Chart(crimeTrendCtx, {
+        type: "line",
+        data: {
+          labels: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."],
+          datasets: [
+            {
+              label: "2566",
+              data: [500, 700, 650, 800, 900, 950, 1000, 1100, 1050, 1200, 1250, 1300],
+              borderColor: "blue",
+              fill: false,
+            },
+            {
+              label: "2567",
+              data: [600, 750, 700, 850, 950, 1000, 1100, 1150, 1100, 1250, 1300, 1350],
+              borderColor: "green",
+              fill: false,
+            },
+            {
+              label: "2568",
+              data: [700, 800, 750, 900, 1000, 1050, 1150, 1200, 1150, 1300, 1350, 1400],
+              borderColor: "red",
+              fill: false,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          aspectRatio: 2,
+          plugins: {
+            legend: {
+              display: true,
+              position: "top",
+            },
+            tooltip: {
+              mode: "index", // Show all datasets for the hovered index (month)
+              intersect: false, // Ensure tooltips show even if not directly over a dot
+              callbacks: {
+                title: function (tooltipItems) {
+                  // Display the month as the title
+                  return tooltipItems[0].label;
+                },
+                label: function (tooltipItem) {
+                  // Format the tooltip to show the year and value
+                  return `${tooltipItem.dataset.label}: ${tooltipItem.raw} คดี`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "เดือน",
+              },
+            },
+            y: {
+              title: {
+                display: true,
+                text: "จำนวนคดี",
+              },
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+    }
+
+    // อัพเดตกราฟวิเคราะห์รูปแบบการเกิดอาชญากรรม
+    function updateCrimeCategoryChart() {
+      const crimeCategoryCtx = document
+        .getElementById("crimeCategoryChart")
+        .getContext("2d");
+      new Chart(crimeCategoryCtx, {
+        type: "bar",
+        data: {
+          labels: ["ชิงทรัพย์", "ลักทรัพย์", "อาชญากรรมไซเบอร์"],
+          datasets: [
+            {
+              label: "จำนวนคดี",
+              data: [1650, 3220, 1390],
+              backgroundColor: ["red", "orange", "blue"],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          aspectRatio: 2,
+        },
+      });
+    }
+
+
+    // อัพเดตกราฟจำแนกตามช่วงวัย
+    function updateDemographicsChart() {
+      const demographicsCtx = document
+        .getElementById("demographicsChart")
+        .getContext("2d");
+      new Chart(demographicsCtx, {
+        type: "pie",
+        data: {
+          labels: ["วัยรุ่น", "ผู้ใหญ่", "ผู้สูงอายุ"],
+          datasets: [
+            {
+              label: "จำนวนคดี",
+              data: [1200, 3000, 800],
+              backgroundColor: ["green", "yellow", "purple"],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          aspectRatio: 2,
+        },
+      });
+    }
+
+
+    // อัพเดตกราฟจำแนกตามเพศ
+    function updateGenderChart() {
+      const genderCtx = document
+        .getElementById("genderChart")
+        .getContext("2d");
+      new Chart(genderCtx, {
+        type: "doughnut",
+        data: {
+          labels: ["ชาย", "หญิง"],
+          datasets: [
+            {
+              label: "จำนวนคดี",
+              data: [2500, 1800],
+              backgroundColor: ["blue", "pink"],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          aspectRatio: 2,
+        },
+      });
+    }
+
+
+    // อัพเดตกราฟจำแนกตามเวลา
+    function updateTimeChart() {
+      const timeCtx = document.getElementById("timeChart").getContext("2d");
+      new Chart(timeCtx, {
+        type: "line",
+        data: {
+          labels: [
+            "6:00-9:00",
+            "9:00-12:00",
+            "12:00-15:00",
+            "15:00-18:00",
+            "18:00-21:00",
+          ],
+          datasets: [
+            {
+              label: "จำนวนคดีตามเวลา",
+              data: [200, 400, 350, 500, 600],
+              borderColor: "purple",
+              fill: false,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          aspectRatio: 2,
+        },
+      });
+    }
+
+
+    // อัพเดตกราฟแสดงคดีรุนแรง
+    function updateViolentCrimeChart() {
+      const violentCrimeCtx = document
+        .getElementById("violentCrimeChart")
+        .getContext("2d");
+      new Chart(violentCrimeCtx, {
+        type: "bar",
+        data: {
+          labels: ["ฆาตกรรม", "ทำร้ายร่างกาย", "ปล้นทรัพย์"],
+          datasets: [
+            {
+              label: "จำนวนคดี",
+              data: [500, 1200, 800],
+              backgroundColor: ["red", "orange", "brown"],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          aspectRatio: 2,
+        },
+      });
+    }
+
+
+    // อัพเดตกราฟแสดงคดีเศรษฐกิจ
+    function updateEconomicCrimeChart() {
+      const economicCrimeCtx = document
+        .getElementById("economicCrimeChart")
+        .getContext("2d");
+      new Chart(economicCrimeCtx, {
+        type: "line",
+        data: {
+          labels: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย."],
+          datasets: [
+            {
+              label: "คดีเศรษฐกิจ",
+              data: [300, 400, 350, 500, 600, 700],
+              borderColor: "green",
+              fill: false,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          aspectRatio: 2,
+        },
+      });
+    }
+
+
+    // อัพเดตกราฟแสดงคดีเพศ
+    function updateGenderCrimeChart() {
+      const genderCrimeCtx = document
+        .getElementById("genderCrimeChart")
+        .getContext("2d");
+      new Chart(genderCrimeCtx, {
+        type: "doughnut",
+        data: {
+          labels: ["ชาย", "หญิง"],
+          datasets: [
+            {
+              label: "จำนวนคดี",
+              data: [2500, 1800],
+              backgroundColor: ["blue", "pink"],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          aspectRatio: 2,
+        },
+      });
+    }
+
+
+    // ฟังการเปลี่ยนแปลงใน dropdown (หมวดหมู่ที่เลือก)
+    document
+      .getElementById("analysisCategory")
+      .addEventListener("change", function (event) {
+        updateChart(event.target.value); // อัพเดตกราฟตามหมวดหมู่ที่เลือก
+      });
+
+
+    // แสดงกราฟเริ่มต้นเมื่อโหลดหน้า
+    updateChart("trend"); // กราฟเริ่มต้นเป็นแนวโน้มอาชญากรรม
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const heatmapCtx = document.getElementById("heatmap").getContext("2d");
+      const areaComparisonCtx = document.getElementById("areaComparison").getContext("2d");
+
+      new Chart(heatmapCtx, {
+        type: 'bar',
+        data: {
+          labels: ["จังหวัด A", "จังหวัด B", "จังหวัด C", "จังหวัด D", "จังหวัด E", "จังหวัด F", "จังหวัด G", "จังหวัด H", "จังหวัด I", "จังหวัด J"],
+          datasets: [{
+            label: "จำนวนเหตุการณ์",
+            data: [90, 85, 80, 78, 75, 70, 65, 60, 58, 55],
+            backgroundColor: "rgba(255, 99, 132, 0.5)",
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+
+      new Chart(areaComparisonCtx, {
+        type: 'pie',
+        data: {
+          labels: ["เขตเมือง", "ชานเมือง", "ต่างจังหวัด"],
+          datasets: [{
+            data: [50, 30, 20],
+            backgroundColor: ["#ff6384", "#36a2eb", "#ffcd56"]
+          }]
+        },
+        options: {
+          responsive: true
+        }
+      });
+
+      const crimeTimeCtx = document.getElementById("crimeTimeChart").getContext("2d");
+      const timeToggle = document.getElementById("timeToggle");
+
+      // Hourly and daily datasets
+      const hourlyData = {
+        labels: ["0:00", "1:00", "2:00", "3:00", "4:00", "5:00", "6:00", "7:00", "8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"],
+        datasets: [
+          {
+            label: "จำนวนคดีรายชั่วโมง",
+            data: [5, 3, 2, 1, 0, 1, 3, 5, 8, 10, 12, 15, 20, 18, 16, 14, 12, 10, 8, 6, 4, 3, 2, 1],
+            borderColor: "rgba(75, 192, 192, 1)",
+            backgroundColor: "rgba(75, 192, 192, 0.2)",
+            fill: true,
+          },
+        ],
+      };
+
+      const dailyData = {
+        labels: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        datasets: [
+          {
+            label: "จำนวนคดีรายวัน",
+            data: [50, 60, 55, 70, 65, 80, 75],
+            borderColor: "rgba(255, 99, 132, 1)",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            fill: true,
+          },
+        ],
+      };
+
+      // Initialize the chart
+      let crimeTimeChart = new Chart(crimeTimeCtx, {
+        type: "line",
+        data: hourlyData,
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "เวลา (ชั่วโมง)",
+              },
+            },
+            y: {
+              title: {
+                display: true,
+                text: "จำนวนคดี",
+              },
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+
+      // Update chart data based on toggle
+      timeToggle.addEventListener("change", function () {
+        if (timeToggle.value === "hourly") {
+          crimeTimeChart.data = hourlyData;
+          crimeTimeChart.options.scales.x.title.text = "เวลา (ชั่วโมง)";
+        } else if (timeToggle.value === "daily") {
+          crimeTimeChart.data = dailyData;
+          crimeTimeChart.options.scales.x.title.text = "วันในสัปดาห์";
+        }
+        crimeTimeChart.update();
+      });
+
+      const festivalCrimeCtx = document.getElementById("festivalCrimeChart").getContext("2d");
+
+      // ข้อมูลตัวอย่างสำหรับเทศกาลและจำนวนคดี
+      const festivalData = {
+        labels: ["สงกรานต์", "ลอยกระทง", "ปีใหม่", "คริสต์มาส", "ตรุษจีน"],
+        datasets: [
+          {
+            label: "จำนวนคดี",
+            data: [120, 90, 150, 80, 100],
+            backgroundColor: [
+              "rgba(255, 99, 132, 0.5)",
+              "rgba(54, 162, 235, 0.5)",
+              "rgba(255, 206, 86, 0.5)",
+              "rgba(75, 192, 192, 0.5)",
+              "rgba(153, 102, 255, 0.5)",
+            ],
+            borderColor: [
+              "rgba(255, 99, 132, 1)",
+              "rgba(54, 162, 235, 1)",
+              "rgba(255, 206, 86, 1)",
+              "rgba(75, 192, 192, 1)",
+              "rgba(153, 102, 255, 1)",
+            ],
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      // สร้างกราฟแท่ง
+      new Chart(festivalCrimeCtx, {
+        type: "bar",
+        data: festivalData,
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "เทศกาล",
+              },
+            },
+            y: {
+              title: {
+                display: true,
+                text: "จำนวนคดี",
+              },
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+
+      const crimePatternCtx = document.getElementById("crimePatternChart").getContext("2d");
+      const crimePatternData = {
+        labels: [
+          "ลักทรัพย์", "ปล้น", "ฉ้อโกง", "ฆาตกรรม", "ทำร้ายร่างกาย",
+          "ชิงทรัพย์", "ยาเสพติด", "ข่มขืน", "เผาบ้าน", "ค้ามนุษย์",
+          "ลักพาตัว", "ปลอมแปลงเอกสาร", "โจรกรรมรถยนต์", "ฟอกเงิน",
+          "คดีไซเบอร์", "ลักลอบขนของเถื่อน", "คดีความรุนแรงในครอบครัว",
+          "ขู่กรรโชก", "ทำลายทรัพย์สิน", "คดีหมิ่นประมาท"
+        ],
+        datasets: [
+          {
+            label: "จำนวนคดี",
+            data: [50, 45, 40, 38, 35, 32, 30, 28, 25, 20, 22, 18, 26, 24, 29, 21, 23, 27, 19, 17],
+            backgroundColor: "rgba(75, 192, 192, 0.5)",
+            borderColor: "rgba(75, 192, 192, 1)",
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      // Create the horizontal bar chart
+      new Chart(crimePatternCtx, {
+        type: "bar",
+        data: crimePatternData,
+        options: {
+          indexAxis: "y", // Switch to horizontal bar chart
+          responsive: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "จำนวนคดี",
+              },
+              beginAtZero: true,
+            },
+            y: {
+              title: {
+                display: true,
+                text: "ประเภทอาชญากรรม",
+              },
+              ticks: {
+                autoSkip: false,
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              display: false, // Hide legend since the chart is self-explanatory
+            },
+          },
+        },
+      });
+    });
+  </script>
+  <script>
+    // Word Cloud List
+    const words = [
+      { text: "ลักทรัพย์", size: 50 },
+      { text: "ปล้น", size: 45 },
+      { text: "ฉ้อโกง", size: 40 },
+      { text: "ฆาตกรรม", size: 38 },
+      { text: "ทำร้ายร่างกาย", size: 35 },
+      { text: "ชิงทรัพย์", size: 32 },
+      { text: "ยาเสพติด", size: 30 },
+      { text: "ข่มขืน", size: 28 },
+      { text: "เผาบ้าน", size: 25 },
+      { text: "ค้ามนุษย์", size: 20 },
+      { text: "ลักพาตัว", size: 22 },
+      { text: "ปลอมแปลงเอกสาร", size: 18 },
+      { text: "โจรกรรมรถยนต์", size: 26 },
+      { text: "ฟอกเงิน", size: 24 },
+      { text: "คดีไซเบอร์", size: 29 },
+      { text: "ลักลอบขนของเถื่อน", size: 21 },
+      { text: "คดีความรุนแรงในครอบครัว", size: 23 },
+      { text: "ขู่กรรโชก", size: 27 },
+      { text: "ทำลายทรัพย์สิน", size: 19 },
+      { text: "คดีหมิ่นประมาท", size: 17 }
+    ];
+
+    const width = document.getElementById("wordcloud").clientWidth;
+    const height = 300;
+
+    const layout = d3.layout.cloud()
+      .size([width, height])
+      .words(words.map(d => ({ text: d.text, size: d.size })))
+      .padding(5)
+      .rotate(() => (Math.random() > 0.5 ? 0 : 90))
+      .font("Impact")
+      .fontSize(d => d.size)
+      .on("end", draw);
+
+    layout.start();
+
+    function draw(words) {
+      d3.select("#wordcloud").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${width / 2}, ${height / 2})`)
+        .selectAll("text")
+        .data(words)
+        .enter().append("text")
+        .style("font-size", d => `${d.size}px`)
+        .style("fill", () => d3.schemeCategory10[Math.floor(Math.random() * 10)])
+        .style("font-family", "Impact")
+        .attr("text-anchor", "middle")
+        .attr("transform", d => `translate(${d.x}, ${d.y}) rotate(${d.rotate})`)
+        .text(d => d.text);
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
