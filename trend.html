@@ -1,107 +1,366 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Product Trends by Month</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
 
-    <!-- Link to ApexCharts Library -->
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <style>
-      /* Optional: Style for the chart container */
-      #chart {
-        max-width: 650px;
-        margin: 35px auto;
-      }
-    </style>
-  </head>
-  <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="#">Crime AI</a>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" aria-current="page" href="ui.html">Home</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="overview.html">Overview</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" href="trend.html">Trends</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="insights.html">Insights</a>
-            </li>
-          </ul>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crime Analysis Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <style>
+    body {
+      background-color: #eaf6fb;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .card {
+      border-radius: 1rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1rem;
+    }
+
+    .title {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .value {
+      font-size: 3rem;
+      font-weight: bold;
+    }
+
+    .highlight-danger {
+      color: red;
+      font-weight: bold;
+    }
+
+    .highlight-success {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Crime AI</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" aria-current="page" href="ui.html">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="overview.html">Overview</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="trend.html">Trends</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="insights.html">Insights</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <div class="container py-4">
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <h2><span class="text-danger">Crime</span> Analysis Report</h2>
+      </div>
+      <div class="col-md-4 text-center">
+        <h5><span class="text-danger">Dangerous</span> Crime Time: <span class="text-danger">11:30:00 PM</span></h5>
+      </div>
+      <!-- Filter -->
+      <div class="col-md-4 text-end">
+        <div class="d-inline-block">
+          <label for="crimeFilter" class="form-label me-2">Filter by Type:</label>
+          <select id="crimeFilter" class="form-select form-select-sm d-inline-block w-auto">
+            <option value="all">All</option>
+            <option value="theft">Theft</option>
+            <option value="assault">Assault</option>
+            <option value="fraud">Fraud</option>
+            <option value="drug">Drug</option>
+            <!-- Add more types as needed -->
+          </select>
         </div>
       </div>
-    </nav>
-    <div id="chart"></div>
+    </div>
 
-    <script>
-      var options = {
-        series: [
-          {
-            name: "Desktops",
-            data: [10, 41, 35, 51, 49, 62, 69, 91, 148],
-          },
-        ],
-        chart: {
-          height: 350,
-          type: "line",
-          zoom: {
-            enabled: false,
-          },
-        },
-        dataLabels: {
-          enabled: false,
-        },
-        stroke: {
-          curve: "straight",
-        },
+
+    <div class="row align-items-stretch">
+      <!-- Total Crimes -->
+      <div class="col-md-4 d-flex">
+        <div class="w-100 d-flex flex-column">
+          <div class="card p-3">
+            <div class="title">Total Crimes</div>
+            <div class="value" style="text-align: center;">
+              <img src="/police-thief.png" alt="Police and Thief Icon" class="me-2"
+                style="width: 100px; height: 90px; vertical-align: middle;">
+              2,500
+            </div>
+          </div>
+          <div class="card p-3">
+            <div class="title">Crime by Years</div>
+            <div id="crimeByYear"></div>
+          </div>
+          <div class="card p-3">
+            <div class="title">Crime by Time-Range</div>
+            <div id="crimeByTimeRange"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-8 d-flex">
+        <div class="w-100 d-flex flex-column">
+          <div class="row">
+            <!-- Text 1 -->
+            <div class="col-md-6 d-flex pe-3"> <!-- Add padding-end (pe-3) for spacing -->
+              <div class="card p-3 bg-light shadow-sm rounded w-100 d-flex flex-column justify-content-between">
+                <h3 class="text-center" style="font-family: 'Arial', sans-serif; font-size: 1.5rem;">
+                  สามารถระงับเหตุอาชญากรรมได้ <span class="text-primary">ร้อยละ 70.04</span>
+                  ซึ่งเป็นผลจากความพยายามของหน่วยงานที่เกี่ยวข้อง
+                </h3>
+              </div>
+            </div>
+
+            <!-- Text 2 -->
+            <div class="col-md-6 d-flex">
+              <div class="card p-3 bg-light shadow-sm rounded w-100 d-flex flex-column justify-content-between">
+                <h3 class="text-center" style="font-family: 'Arial', sans-serif; font-size: 1.5rem;">
+                  อีก <span class="text-danger">ร้อยละ 29.96%</span>
+                  ของอาชญากรรมยังคงไม่ได้รับการแก้ไขแต่มีการติดตามอย่างใกล้ชิด
+                </h3>
+              </div>
+            </div>
+          </div>
+          <!-- Second Row -->
+          <div class="row">
+            <div class="col-md-9 d-flex">
+              <div class="card p-3 w-100 d-flex flex-column">
+                <div class="title">Crime by Month/Weekday</div>
+                <div class="mt-2" id="crimeHeatmap"></div>
+              </div>
+            </div>
+            <div class="col-md-3 d-flex">
+              <div class="card p-3 w-100 d-flex flex-column">
+                <div class="title mb-3">Crime by Zone</div>
+                <div class="zone-info">
+                  <div class="zone-item mb-3">
+                    <h5 class="text-primary">เขตพระนคร</h5>
+                    <p class="text-muted">ความเสี่ยง: <span class="text-danger">85%</span></p>
+                  </div>
+                  <div class="zone-item mb-3">
+                    <h5 class="text-primary">เขตบางกอกน้อย</h5>
+                    <p class="text-muted">ความเสี่ยง: <span class="text-danger">72%</span></p>
+                  </div>
+                  <div class="zone-item mb-3">
+                    <h5 class="text-primary">เขตห้วยขวาง</h5>
+                    <p class="text-muted">ความเสี่ยง: <span class="text-danger">65%</span></p>
+                  </div>
+                  <div class="zone-item mb-3">
+                    <h5 class="text-primary">เขตดุสิต</h5>
+                    <p class="text-muted">ความเสี่ยง: <span class="text-danger">25%</span></p>
+                  </div>
+                  <!-- Add more zones as needed -->
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-9 d-flex">
+              <div class="card p-3 w-100 d-flex flex-column">
+                <div class="title">Crime Analysis Report</div>
+                <div id="crimeTrendChart"></div>
+              </div>
+            </div>
+            <div class="col-md-3 d-flex">
+              <div class="card p-3 w-100 d-flex flex-column">
+                <div class="title text-center mb-2">Summary</div>
+
+                <h5 class="text-danger mb-1">🚨 1. Assault (+30%)</h5>
+                <p class="text-muted" style="font-size: 1rem;">
+                  หลีกเลี่ยงพื้นที่เปลี่ยว ใช้เส้นทางที่มีแสงสว่าง และแจ้งตำแหน่งให้คนใกล้ชิดทราบเมื่อเดินทางคนเดียว
+                </p>
+
+                <h5 class="text-warning mb-1">🚨 2. Burglary (+25%)</h5>
+                <p class="text-muted mb-0" style="font-size: 1rem;">
+                  ตรวจสอบให้แน่ใจว่าบ้านล็อกประตูหน้าต่างทุกครั้ง
+                  ติดตั้งกล้องวงจรปิดหรือระบบแจ้งเตือนเพื่อเพิ่มความปลอดภัย
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <!-- First Row -->
+      </div>
+    </div>
+  </div>
+  <script>
+    // Sample crime data with percentage increases
+    const crimeData = [
+      { x: 'Theft', y: 15 },  // Example percentage increase
+      { x: 'Burglary', y: 25 },
+      { x: 'Robbery', y: 10 },
+      { x: 'Assault', y: 30 },
+      { x: 'Fraud', y: 5 },
+      { x: 'Vandalism', y: 20 },
+      { x: 'Hacking', y: 8 },
+      { x: 'Drug Possession', y: 12 }
+    ];
+
+    // Sort data based on percentage increase
+    const sortedCrimeData = crimeData.sort((a, b) => b.y - a.y);
+
+    // Assign colors to each crime based on their rank
+    const barColors = sortedCrimeData.map((data, index) => {
+      return index < 4 ? '#FF4560' : '#1E90FF';  // Red for top 4 crimes, Blue for the rest
+    });
+
+    // Chart options
+    var options = {
+      chart: {
+        type: 'bar',
+        height: 350
+      },
+      series: [{
+        name: 'Crime Increase (%)',
+        data: sortedCrimeData.map((data, index) => ({
+          x: data.x,
+          y: data.y,
+          fillColor: barColors[index] // Assign color based on the rank
+        }))
+      }],
+      xaxis: {
+        categories: sortedCrimeData.map(data => data.x),  // Crime types as categories
+      },
+      title: {
+        text: 'Crime Increase by Type',
+        align: 'center'
+      },
+      plotOptions: {
+        bar: {
+          horizontal: false
+        }
+      },
+      dataLabels: {
+        enabled: true,
+        formatter: function (val) {
+          return val + '%'; // Add percent symbol
+        }
+      },
+      grid: {
+        show: true
+      }
+    };
+
+    // Render the chart
+    var chart = new ApexCharts(document.querySelector("#crimeTrendChart"), options);
+    chart.render();
+  </script>
+  <script>
+    // Crime by Year
+    var options1 = {
+      chart: { type: 'bar', height: 200 },
+      series: [{
+        name: 'Crimes',
+        data: [600, 1150, 945]
+      }],
+      xaxis: {
+        categories: ['2021', '2022', '2023']
+      },
+      colors: ['#008FFB']
+    };
+    new ApexCharts(document.querySelector("#crimeByYear"), options1).render();
+
+    // Crime by Time Range
+    var options2 = {
+      chart: {
+        type: 'bar',
+        height: 442,
+      },
+      plotOptions: {
+        bar: {
+          horizontal: true // Makes the bar chart horizontal
+        }
+      },
+      series: [{
+        name: 'Crimes',
+        data: [
+          { x: '9PM-11:59PM', y: 583, fillColor: '#FF4560' },
+          { x: '12AM-2:59AM', y: 514, fillColor: '#FF4560' },
+          { x: '3AM-5:59AM', y: 332, fillColor: '#0000FF' },
+          { x: '6PM-8:59PM', y: 319, fillColor: '#0000FF' },
+          { x: '6AM-8:59AM', y: 222, fillColor: '#0000FF' },
+          { x: '9AM-11:59AM', y: 201, fillColor: '#0000FF' },
+          { x: '12PM-2:59PM', y: 195, fillColor: '#0000FF' },
+          { x: '3PM-5:59PM', y: 144, fillColor: '#0000FF' }
+        ]
+      }],
+      xaxis: {
+        categories: ['9PM-11:59PM', '12AM-2:59AM', '3AM-5:59AM', '6PM-8:59PM', '6AM-8:59AM', '9AM-11:59AM', '12PM-2:59PM', '3PM-5:59PM']
+      },
+      dataLabels: {
+        enabled: true,  // Enable data labels
+        style: {
+          fontSize: '12px',
+          fontWeight: 'bold',
+          colors: ['#000'] // Color of the data label text (black)
+        }
+      },
+      fill: {
+        type: 'solid'
+      }
+    };
+
+    new ApexCharts(document.querySelector("#crimeByTimeRange"), options2).render();
+
+    // Crime Heatmap (placeholder - needs proper heatmap logic)
+    var options3 = {
+      chart: {
+        height: 300,
+        type: 'heatmap'
+      },
+      series: Array.from({ length: 7 }, (_, i) => ({
+        name: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][i],
+        data: Array.from({ length: 12 }, (_, j) => ({
+          x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][j],
+          y: Math.floor(Math.random() * 50 + 150)  // Random crime data between 150 and 200
+        }))
+      })),
+      colors: ["#FF4560"], // Crime color
+      title: {
+        text: 'Amount of crimes', // Update the chart title
+        align: 'center',
+        style: {
+          fontSize: '16px',
+          fontWeight: 'bold',
+          color: '#333'
+        }
+      },
+      xaxis: {
+        type: 'category',
+        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
         title: {
-          text: "Product Trends by Month",
-          align: "left",
-        },
-        grid: {
-          row: {
-            colors: ["#f3f3f3", "transparent"], // Takes an array that will be repeated on columns
-            opacity: 0.5,
-          },
-        },
-        xaxis: {
-          categories: [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "Jun",
-            "Jul",
-            "Aug",
-            "Sep",
-          ],
-        },
-      };
+          text: 'Month'
+        }
+      },
+      yaxis: {
+        type: 'category',
+        categories: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        title: {
+          text: 'Weekday'
+        }
+      }
+    };
 
-      var chart = new ApexCharts(document.querySelector("#chart"), options);
-      chart.render();
-    </script>
-  </body>
+    new ApexCharts(document.querySelector("#crimeHeatmap"), options3).render();
+  </script>
+</body>
+
 </html>
